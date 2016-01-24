@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.Spinner;
 
 import java.util.HashMap;
@@ -18,6 +19,8 @@ import at.maui.cardar.ui.activity.ArActivity;
  */
 public class LanguageSelectorActivity extends Activity{
     public static final String KEY_LANG = "key_lang";
+    public static final String KEY_TEXT = "key_text";
+
     private static final String[] ITEMS = {"Deutsche", "Español", "Français", "हिंदी", "中文"};
     private static final String[] KEYS = {"de", "es", "fr", "hi", "zh-CN"};
     private static final HashMap<String, String> ITEM_TO_KEY;
@@ -36,6 +39,8 @@ public class LanguageSelectorActivity extends Activity{
         setContentView(R.layout.activity_selector);
 
         final Spinner dropdown = (Spinner) findViewById(R.id.spinner);
+        final EditText text = (EditText) findViewById(R.id.editText);
+
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item, ITEMS);
         dropdown.setAdapter(adapter);
 
@@ -45,6 +50,8 @@ public class LanguageSelectorActivity extends Activity{
             public void onClick(View view) {
                 Intent i = new Intent(LanguageSelectorActivity.this, ArActivity.class);
                 i.putExtra(KEY_LANG, ITEM_TO_KEY.get(dropdown.getSelectedItem().toString()));
+                i.putExtra(KEY_TEXT, text.getText().toString());
+
                 startActivity(i);
             }
         });

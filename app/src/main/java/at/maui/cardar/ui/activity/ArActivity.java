@@ -2,9 +2,11 @@ package at.maui.cardar.ui.activity;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 
 import com.google.vrtoolkit.cardboard.CardboardActivity;
 import com.google.vrtoolkit.cardboard.CardboardView;
+import com.pennapps.instadubb.ApiRequestor;
 import com.pennapps.instadubb.LanguageSelectorActivity;
 
 import at.maui.cardar.R;
@@ -24,6 +26,7 @@ public class ArActivity extends CardboardActivity {
     CardboardView cardboardView;
 
     private String mLangKey;
+    private String mText;
     private Renderer mRenderer;
     private Recorder mRecorder;
     private int mRecordingNum = 0;
@@ -47,9 +50,21 @@ public class ArActivity extends CardboardActivity {
         // Retrieve selected language
         Intent i = getIntent();
         mLangKey = i.getStringExtra(LanguageSelectorActivity.KEY_LANG);
+        mText = i.getStringExtra(LanguageSelectorActivity.KEY_TEXT);
+
+        Log.d("CardAR", "Text is " + mText);
     }
 
-    @Override
     public void onCardboardTrigger() {
+        mRecordingNum++;
+
+        if((mRecordingNum - 1) % 2 == 0){
+            ApiRequestor req = new ApiRequestor(mLangKey, this);
+            req.execute(mText);
+        }
+    }
+
+    public void setText(String text){
+        overlayView.show3DToast(text);
     }
 }

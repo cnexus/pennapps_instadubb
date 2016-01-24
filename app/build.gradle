@@ -1,15 +1,55 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 20
-    buildToolsVersion "20.0.0"
+    compileSdkVersion 22
+    buildToolsVersion "21.1.2"
 
     defaultConfig {
         applicationId "at.maui.cardar"
         minSdkVersion 15
-        targetSdkVersion 20
+        targetSdkVersion 22
         versionCode 3
         versionName "0.0.3"
+    }
+}
+compileOptions {
+    sourceCompatibility JavaVersion.VERSION_1_7
+    targetCompatibility JavaVersion.VERSION_1_7
+}
+
+signingConfigs {
+    debug {
+        storeFile file("debug.keystore")
+    }
+}
+
+buildTypes {
+    debug {
+        signingConfig signingConfigs.debug
+    }
+    release {
+        minifyEnabled false
+        proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+    }
+}
+
+packagingOptions {
+    exclude 'META-INF/DEPENDENCIES.txt'
+    exclude 'META-INF/LICENSE.txt'
+    exclude 'META-INF/NOTICE.txt'
+    exclude 'META-INF/NOTICE'
+    exclude 'META-INF/LICENSE'
+    exclude 'META-INF/DEPENDENCIES'
+    exclude 'META-INF/notice.txt'
+    exclude 'META-INF/license.txt'
+    exclude 'META-INF/dependencies.txt'
+    exclude 'META-INF/LGPL2.1'
+}
+
+repositories {
+    maven {
+        // The username and password for this repo is set below
+        url 'https://houndify.com/maven/'
     }
 }
 
@@ -17,4 +57,66 @@ dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     compile 'com.jakewharton:butterknife:5.1.1'
     compile 'com.jakewharton.timber:timber:2.4.1'
+    compile ('hound.android:hound-sdk:0.2.15@aar'){
+        transitive=true
+    }
+
+    compile ('hound.android:phrasespotter:1.4.0'){
+        transitive=true
+    }
+    // compile 'hound.android:phrasespotter:1.1.0'
 }
+
+task packageAll (type: Zip) {
+    baseName = 'houndify-sdk-sample'
+    version = android.defaultConfig.versionName
+
+    from(projectDir)
+    into('')
+
+    exclude 'build'
+    exclude 'sample.iml'
+    exclude '.idea'
+    exclude '.gradle'
+    exclude 'local.properties'
+}
+
+// To keep our houndify credentials out of source control, we pass them in as a properties file or as environmental variables.
+
+// Be sure not to check in your Houndify username and password to your source control!
+boolean propertyFileHasHoundifyUsername = false;
+if (project.hasProperty("houndifyProperties")) {
+    File propFile = file(houndifyProperties)
+    if (propFile.exists()) {
+        Properties p = new Properties()
+        p.load(new FileInputStream(propFile))
+        if ( p.username != null ) {
+            propertyFileHasHoundifyUsername = true;
+            println "Using " + houndifyProperties + " for houndify repo"
+            setHoundifyMavenCredentials(p.username, p.password)
+        }
+    }
+    else {
+        throw new FileNotFoundException("Unable to find houndifyMavenProperties file at " + signingProperties)
+    }
+}
+
+if ( propertyFileHasHoundifyUsername == false && System.getenv("HOUNDIFY_USERNAME") != null && System.getenv("HOUNDIFY_PASSWORD")) {
+    println "Using environmental variables for houndify repo"
+    setHoundifyMavenCredentials(System.getenv("HOUNDIFY_USERNAME"), System.getenv("HOUNDIFY_PASSWORD"))
+}
+else if( propertyFileHasHoundifyUsername == false ){
+    throw new IllegalStateException("You must specify the houndify repos credentials either in the houndify.properties file or as environmental variables")
+}
+
+// Sets the username and password for the houndify repository
+def setHoundifyMavenCredentials(username, password) {
+    for (repo in repositories) {
+        if (repo.properties.url.toString().equals("https://houndify.com/maven/")) {
+            repo.properties.credentials.username = username
+            repo.properties.credentials.password = password
+        }
+    }
+}
+
+apply plugin: 'announce'
